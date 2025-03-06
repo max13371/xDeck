@@ -1,9 +1,59 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="true" userDefinedModelVersionIdentifier="">
-    <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
-        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22522" systemVersion="24C5" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+    <entity name="Notification" representedClassName="Notification" syncable="YES" codeGenerationType="class">
+        <attribute name="date" attributeType="String" defaultValueString="2025-01-01T00:00:00Z"/>
+        <attribute name="id" attributeType="UUID" defaultValueString="00000000-0000-0000-0000-000000000000"/>
+        <attribute name="isRead" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="message" attributeType="String" defaultValueString="Нет сообщения"/>
+        <attribute name="title" attributeType="String" defaultValueString="Нет заголовка"/>
+        <relationship name="package" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Package" inverseName="notifications" inverseEntity="Package"/>
+        <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="notifications" inverseEntity="User"/>
     </entity>
-    <elements>
-        <element name="Item" positionX="-63" positionY="-18" width="128" height="44"/>
-    </elements>
-</model>
+    <entity name="Package" representedClassName="Package" syncable="YES" codeGenerationType="class">
+        <attribute name="address" attributeType="String" defaultValueString="Адрес не указан"/>
+        <attribute name="cancelDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="creationDate" attributeType="String" defaultValueString="2025-01-01T00:00:00Z"/>
+        <attribute name="deliveryDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" defaultValueString="00000000-0000-0000-0000-000000000000"/>
+        <attribute name="isCancelled" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="recipientName" attributeType="String" defaultValueString="Получатель не указан"/>
+        <attribute name="recipientPhone" attributeType="String" defaultValueString="+7 (000) 000-00-00"/>
+        <attribute name="status" attributeType="String" defaultValueString="Ожидает отправки"/>
+        <attribute name="trackingNumber" attributeType="String" defaultValueString="XX000000000"/>
+        <relationship name="notifications" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Notification" inverseName="package" inverseEntity="Notification"/>
+        <relationship name="route" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="Route" inverseName="package" inverseEntity="Route"/>
+        <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="packages" inverseEntity="User"/>
+    </entity>
+    <entity name="Route" representedClassName="Route" syncable="YES" codeGenerationType="class">
+        <attribute name="estimatedArrivalDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" defaultValueString="00000000-0000-0000-0000-000000000000"/>
+        <attribute name="lastUpdated" attributeType="String" defaultValueString="2025-01-01T00:00:00Z"/>
+        <attribute name="totalDistance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="package" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Package" inverseName="route" inverseEntity="Package"/>
+        <relationship name="routePoints" optional="YES" toMany="YES" deletionRule="Cascade" ordered="NO" destinationEntity="RoutePoint" inverseName="route" inverseEntity="RoutePoint"/>
+    </entity>
+    <entity name="RoutePoint" representedClassName="RoutePoint" syncable="YES" codeGenerationType="class">
+        <attribute name="arrivalDate" optional="YES" attributeType="String"/>
+        <attribute name="departureDate" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" defaultValueString="00000000-0000-0000-0000-000000000000"/>
+        <attribute name="isCurrentLocation" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="latitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="locationName" attributeType="String" defaultValueString=""/>
+        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="order" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="status" attributeType="String" defaultValueString="Ожидание"/>
+        <attribute name="statusDescription" optional="YES" attributeType="String"/>
+        <relationship name="route" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Route" inverseName="routePoints" inverseEntity="Route"/>
+    </entity>
+    <entity name="User" representedClassName="User" syncable="YES" codeGenerationType="class">
+        <attribute name="email" attributeType="String" defaultValueString="example@email.com"/>
+        <attribute name="id" attributeType="UUID" defaultValueString="00000000-0000-0000-0000-000000000000"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="password" attributeType="String" defaultValueString=""/>
+        <attribute name="phone" optional="YES" attributeType="String"/>
+        <relationship name="notifications" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Notification" inverseName="user" inverseEntity="Notification"/>
+        <relationship name="packages" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Package" inverseName="user" inverseEntity="Package"/>
+    </entity>
+</model> 

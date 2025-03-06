@@ -14,15 +14,56 @@ struct PersistenceController {
     static let preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
-        for _ in 0..<10 {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
+        
+        // Создаем тестового пользователя
+        let testUser = User(context: viewContext)
+        testUser.id = UUID()
+        testUser.name = "Тестовый Пользователь"
+        testUser.email = "test@example.com"
+        testUser.password = "password123"
+        testUser.phone = "+7 (999) 123-45-67"
+        
+        // Создаем тестовые посылки
+        for i in 0..<5 {
+            let newPackage = Package(context: viewContext)
+            newPackage.id = UUID()
+            newPackage.trackingNumber = generateTrackingNumber()
+            
+            // Преобразуем даты в строки ISO 8601
+            let dateCreation = Date().addingTimeInterval(-Double(i * 86400))
+            let dateDelivery = Date().addingTimeInterval(Double((5 - i) * 86400))
+            
+            let dateFormatter = ISO8601DateFormatter()
+            newPackage.creationDate = dateFormatter.string(from: dateCreation)
+            
+            // Обычные даты остаются как есть
+            newPackage.deliveryDate = dateDelivery
+            
+            newPackage.recipientName = "Получатель \(i+1)"
+            newPackage.recipientPhone = "+7 (999) \(100+i)-\(200+i)-\(300+i)"
+            newPackage.address = "ул. Примерная, д. \(i+1), кв. \(i*10+1)"
+            newPackage.status = ["Создан", "В обработке", "Отправлен", "В пути", "Доставлен"][i % 5]
+            newPackage.latitude = 55.751244 + Double(i) * 0.01
+            newPackage.longitude = 37.618423 + Double(i) * 0.01
+            newPackage.user = testUser
+            
+            // Создаем уведомление для посылки
+            let notification = Notification(context: viewContext)
+            notification.id = UUID()
+            notification.title = "Обновление статуса"
+            notification.message = "Статус вашей посылки \(newPackage.trackingNumber ?? "") изменен на \(newPackage.status ?? "")"
+            
+            // Дата уведомления как строка
+            notification.date = dateFormatter.string(from: Date().addingTimeInterval(-Double(i * 3600)))
+            
+            notification.isRead = i > 2
+            notification.package = newPackage
+            notification.user = testUser
         }
+        
         do {
             try viewContext.save()
         } catch {
-            // Replace this implementation with code to handle the error appropriately.
-            // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
             let nsError = error as NSError
             fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
         }
@@ -38,20 +79,20 @@ struct PersistenceController {
         }
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-
-                /*
-                 Typical reasons for an error here include:
-                 * The parent directory does not exist, cannot be created, or disallows writing.
-                 * The persistent store is not accessible, due to permissions or data protection when the device is locked.
-                 * The device is out of space.
-                 * The store could not be migrated to the current model version.
-                 Check the error message to determine what the actual problem was.
-                 */
                 fatalError("Unresolved error \(error), \(error.userInfo)")
             }
         })
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
+}
+
+// Функция для генерации трек-номера
+func generateTrackingNumber() -> String {
+    let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    let numbers = "0123456789"
+    
+    let randomLetters = String((0..<2).map { _ in letters.randomElement()! })
+    let randomNumbers = String((0..<9).map { _ in numbers.randomElement()! })
+    
+    return "\(randomLetters)\(randomNumbers)"
 }
