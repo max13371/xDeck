@@ -13,6 +13,7 @@ struct LoginView: View {
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var showRegister: Bool = false
+    @State private var showForgotPassword: Bool = false
     @State private var showError: Bool = false
     @State private var errorMessage: String = ""
     
@@ -61,6 +62,19 @@ struct LoginView: View {
                             .padding(.top, 5)
                     }
                     
+                    // Ссылка на восстановление пароля
+                    HStack {
+                        Spacer()
+                        Button {
+                            showForgotPassword = true
+                        } label: {
+                            Text("Забыли пароль?")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .padding(.top, 5)
+                    
                     Button {
                         login()
                     } label: {
@@ -107,6 +121,10 @@ struct LoginView: View {
             }
             .sheet(isPresented: $showRegister) {
                 RegisterView()
+                    .environmentObject(authManager)
+            }
+            .sheet(isPresented: $showForgotPassword) {
+                ForgotPasswordView()
                     .environmentObject(authManager)
             }
         }

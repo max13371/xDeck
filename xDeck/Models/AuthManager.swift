@@ -13,8 +13,26 @@ class AuthManager: ObservableObject {
     @Published var currentUser: User?
     @Published var isAuthenticated: Bool = false
     @Published var authError: String?
+    @Published var resetPasswordStatus: ResetPasswordStatus = .idle
     
     private let context: NSManagedObjectContext
+    
+    enum ResetPasswordStatus: Equatable {
+        case idle
+        case success
+        case error(String)
+        
+        static func == (lhs: ResetPasswordStatus, rhs: ResetPasswordStatus) -> Bool {
+            switch (lhs, rhs) {
+            case (.idle, .idle), (.success, .success):
+                return true
+            case (.error(let lhsMessage), .error(let rhsMessage)):
+                return lhsMessage == rhsMessage
+            default:
+                return false
+            }
+        }
+    }
     
     init(context: NSManagedObjectContext) {
         self.context = context
@@ -108,6 +126,88 @@ class AuthManager: ObservableObject {
             return true
         } catch {
             print("Ошибка при обновлении профиля: \(error)")
+            return false
+        }
+    }
+    
+    // MARK: - Восстановление пароля
+    
+    // Метод для инициации процесса восстановления пароля
+    func initiatePasswordReset(email: String) -> Bool {
+        let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "email == %@", email)
+        
+        do {
+            let users = try context.fetch(fetchRequest)
+            
+            guard let user = users.first else {
+                resetPasswordStatus = .error("Пользователь с таким email не найден")
+                return false
+            }
+            
+            // Генерируем токен сброса пароля
+            let resetToken = UUID().uuidString
+            user.resetToken = resetToken
+            
+            try context.save()
+            
+            resetPasswordStatus = .success
+            return true
+        } catch {
+            resetPasswordStatus = .error("Ошибка при запросе сброса пароля: \(error.localizedDescription)")
+            return false
+        }
+    }
+    
+    // Метод для проверки токена сброса пароля
+    func validateResetToken(email: String, token: String) -> Bool {
+        let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "email == %@ AND resetToken == %@", email, token)
+        
+        do {
+            let users = try context.fetch(fetchRequest)
+            return !users.isEmpty
+        } catch {
+            resetPasswordStatus = .error("Ошибка при проверке токена: \(error.localizedDescription)")
+            return false
+        }
+    }
+    
+    // Метод для сброса пароля
+    func resetPassword(email: String, token: String, newPassword: String) -> Bool {
+        let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "email == %@ AND resetToken == %@", email, token)
+        
+        do {
+            let users = try context.fetch(fetchRequest)
+            
+            guard let user = users.first else {
+                resetPasswordStatus = .error("Недействительный токен сброса пароля")
+                return false
+            }
+            
+            // Устанавливаем новый пароль
+            user.password = newPassword
+            // Очищаем токен сброса пароля
+            user.resetToken = nil
+            
+            try context.save()
+            
+            // Создаем уведомление о смене пароля
+            let notification = Notification(context: context)
+            notification.id = UUID()
+            notification.title = "Пароль успешно изменен"
+            notification.message = "Ваш пароль был успешно изменен. Если это были не вы, немедленно свяжитесь с поддержкой."
+            notification.date = ISO8601DateFormatter().string(from: Date())
+            notification.isRead = false
+            notification.user = user
+            
+            try context.save()
+            
+            resetPasswordStatus = .success
+            return true
+        } catch {
+            resetPasswordStatus = .error("Ошибка при сбросе пароля: \(error.localizedDescription)")
             return false
         }
     }

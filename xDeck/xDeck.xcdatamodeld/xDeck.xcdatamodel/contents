@@ -53,7 +53,8 @@
         <attribute name="name" attributeType="String" defaultValueString=""/>
         <attribute name="password" attributeType="String" defaultValueString=""/>
         <attribute name="phone" optional="YES" attributeType="String"/>
+        <attribute name="resetToken" optional="YES" attributeType="String"/>
         <relationship name="notifications" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Notification" inverseName="user" inverseEntity="Notification"/>
         <relationship name="packages" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Package" inverseName="user" inverseEntity="Package"/>
     </entity>
-</model> 
+</model>
