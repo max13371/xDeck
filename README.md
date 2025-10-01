@@ -1,4 +1,4 @@
-# 📦 TrackPack
+# 📦 xDeck
 
 **Система отслеживания посылок на Swift**
 
@@ -10,12 +10,6 @@
 
 ## 🛠 Технологии
 - **iOS:** Swift, SwiftUI
-- **Backend:** Vapor (Swift)
 - **База данных:** PostgreSQL
 - **Уведомления:** Apple Push Notification Service
 
-## 🏃‍♂️ Быстрый старт
-```bash
-git clone https://github.com/username/trackpack-ios.git
-cd trackpack-ios
-open Package.swift
